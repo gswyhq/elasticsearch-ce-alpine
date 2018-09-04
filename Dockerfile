@@ -30,6 +30,7 @@ RUN set -ex; \
 		gnupg \
 		openssl \
 		tar \
+		unzip \
 	; \
 	\
 	wget -O elasticsearch.tar.gz "$ELASTICSEARCH_TARBALL"; \
@@ -49,9 +50,15 @@ RUN set -ex; \
 	tar -xf elasticsearch.tar.gz --strip-components=1; \
 	rm elasticsearch.tar.gz; \
 	\
+	wget -c -t 0 -O elasticsearch-analysis-ik-${ELASTICSEARCH_VERSION}.zip https://github.com/medcl/elasticsearch-analysis-ik/releases/download/v${ELASTICSEARCH_VERSION}/elasticsearch-analysis-ik-${ELASTICSEARCH_VERSION}.zip; \
+	unzip elasticsearch-analysis-ik-${ELASTICSEARCH_VERSION}.zip -d ./plugins; \
+	mv ./plugins/elasticsearch ./plugins/elasticsearch-analysis-ik-${ELASTICSEARCH_VERSION}; \
+    wget -c -t 0 -O elasticsearch-analysis-pinyin-${ELASTICSEARCH_VERSION}.zip https://github.com/medcl/elasticsearch-analysis-pinyin/releases/download/v${ELASTICSEARCH_VERSION}/elasticsearch-analysis-pinyin-${ELASTICSEARCH_VERSION}.zip; \
+    unzip elasticsearch-analysis-pinyin-${ELASTICSEARCH_VERSION}.zip -d ./plugins; \
+    mv ./plugins/elasticsearch ./plugins/elasticsearch-analysis-pinyin-${ELASTICSEARCH_VERSION}; \
 	apk del .fetch-deps; \
 	\
-	mkdir -p ./plugins; \
+	# mkdir -p ./plugins; \
 	for path in \
 		./data \
 		./logs \
@@ -74,10 +81,12 @@ RUN set -ex; \
 
 COPY config ./config
 
-VOLUME /usr/share/elasticsearch/data
+# VOLUME /usr/share/elasticsearch/data
 
 COPY docker-entrypoint.sh /
 
 EXPOSE 9200 9300
 ENTRYPOINT ["/docker-entrypoint.sh"]
 CMD ["elasticsearch"]
+
+# docker build -t elasticsearch-alpine-ik-pinyin-5.6.10 -f Dockerfile .
